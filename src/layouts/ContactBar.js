@@ -24,6 +24,7 @@ import ContactItem, { ContactSearchItem } from "../components/Chat/ContactItem";
 import SearchContact from "./Chat/SearchContact";
 import { requestEndpoint } from "../utils/request";
 import { useUserInfoDialog } from "../contexts/UserInfoContext";
+import useClickOutside from "../hooks/useClickOutside";
 
 const rowHeight = 76;
 
@@ -102,7 +103,6 @@ const ContactBar = React.memo(() => {
 
     const { chatList, isLoading } = useSelector((state) => state.chat);
 
-    const inputRef = React.useRef(null);
     const [focused, setFocused] = useState(false);
 
     useEffect(() => {
@@ -113,22 +113,15 @@ const ContactBar = React.memo(() => {
         }
 
         fetchh();
+    }, []);
 
-        const handleClickOutside = (event) => {
-            if (inputRef.current && !inputRef.current.contains(event.target)) {
-                if (focused) {
-                    console.log('Ko focus nua');
-                    setFocused(false);
-                }
-            }
-        };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [focused]);
-
+    const inputRef = useClickOutside(() => {
+        if(focused)
+        {
+            setFocused(false);
+        }
+    })
 
     const sortedChat = useMemo(() => {
         return chatList.slice().sort((a, b) => {

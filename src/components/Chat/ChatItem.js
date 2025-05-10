@@ -13,6 +13,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 
 import { useConfirm } from "material-ui-confirm";
 
+import { PhotoProvider, PhotoView } from 'react-photo-view';
 
 import {
     Menu,
@@ -30,7 +31,8 @@ import { useNavigate } from 'react-router-dom';
 import { ChatRole } from '../../models/chat';
 import { useUserInfoDialog } from '../../contexts/UserInfoContext';
 
-
+import Markdown from '../Markdown';
+import GradientCircularProgress from '../GradientProgress';
 
 const MAX_DISPLAY = 5;
 
@@ -123,7 +125,7 @@ const ChatAttachment = ({ attachment, isMe }) => {
     const Ico = mapMimeTypeToIcon(mimetype);
     const theme = useTheme();
     return (
-        <Box sx={{ width: "100%", display: "flex", justifyContent: isMe ? "flex-end" : "flex-start", cursor: "pointer" }} onClick={() => {
+        <Box sx={{ width: "100%", minWidth: "200px", margin: "4px 0", display: "flex", justifyContent: isMe ? "flex-end" : "flex-start", cursor: "pointer" }} onClick={() => {
             downloadAs(upload_url, original_filename);
         }}>
             <Box sx={{
@@ -142,22 +144,62 @@ const ChatAttachment = ({ attachment, isMe }) => {
     )
 }
 
+function OtherAttachments({ attachments, isMe }) {
+    return (
+        <Box sx={{ mt: 1 }}>
+            {
+                attachments.map((v, i) => {
+                    return <ChatAttachment key={i} attachment={v} isMe={isMe} />
+                })
+            }
+        </Box>
+    )
+}
+
 function MediaAttachments({ attachments, isMe }) {
     return (
-        <ImageList sx={{ maxWidth: "500px" }} cols={3}>
-            {attachments.map((item) => (
-                <ImageListItem key={item.id}>
-                    <img
-                        srcSet={`${item.upload_url}?w=164&h=164&fit=crop&auto=format&dpr=2 2x`}
-                        src={`${item.upload_url}?w=164&h=164&fit=crop&auto=format`}
-                        alt={item.original_filename}
-                        loading="lazy"
-                    />
-                </ImageListItem>
-            ))}
-        </ImageList>
+        <PhotoProvider>
+            <Box sx={{ mt: 1 }}>
+                <ImageList
+                    cols={attachments.length > 1 ? 2 : 1}
+                    gap={8}
+                    sx={{ maxWidth: 500 }}
+                >
+                    {attachments.map((item, index) => (
+                        <ImageListItem key={index} sx={{ objectFit: "contain" }}>
+                            <PhotoView src={item.upload_url}>
+                                <img
+                                    src={item.upload_url}
+                                    alt={`attachment-${index}`}
+                                    loading="lazy"
+                                    style={{ borderRadius: 8, maxWidth: "100%", maxHeight: "100%" }}
+                                />
+                            </PhotoView>
+                        </ImageListItem>
+                    ))}
+                </ImageList>
+            </Box>
+        </PhotoProvider>
+
+
     );
 }
+
+const Message = styled(Box)(({ isMe }) => ({
+    display: "flex",
+    justifyContent: isMe ? "flex-end" : "flex-start",
+    marginBottom: "10px",
+    alignItems: "flex-end"
+}));
+
+const MessageContent = styled(Paper)(({ theme, isMe }) => ({
+    padding: "10px 15px",
+    maxWidth: "70%",
+    backgroundColor: !isMe ? theme.palette.background.paper : alpha(theme.palette.primary.main, 0.1),
+    borderRadius: "15px",
+    marginLeft: isMe ? 0 : "8px",
+    marginRight: isMe ? "8px" : 0
+}));
 
 export function ChatItemSkeleton({ isMe }) {
     return (
@@ -183,7 +225,7 @@ function ChatItem({ chat, chatState, isMe = false, noPadding = false }) {
         }
     )
 
-    const {show: _showUserDialog} = useUserInfoDialog();
+    const { show: _showUserDialog } = useUserInfoDialog();
 
     const navigate = useNavigate();
     const confirm = useConfirm();
@@ -196,8 +238,7 @@ function ChatItem({ chat, chatState, isMe = false, noPadding = false }) {
     }
 
     function showUserDialog() {
-        if(chat.user)
-        {
+        if (chat.user) {
             _showUserDialog(chat?.user);
         }
     }
@@ -213,6 +254,8 @@ function ChatItem({ chat, chatState, isMe = false, noPadding = false }) {
     const haveAttachments = mediaList.length > 0 || otherList > 0;
     const haveContent = (chat?.content && chat?.content.length > 0);
     const renderContent = (!isMe) || (isMe && haveContent) || chat.ref_message;
+
+    const isLoadingMsg = chat?.loading == true;
 
     const onReplySelected = () => {
         dispatch(setReplyInfo({
@@ -259,62 +302,47 @@ function ChatItem({ chat, chatState, isMe = false, noPadding = false }) {
     }
 
     return (
-        <Stack id={`#message-${chat.id}`} direction="column" spacing={2} sx={{ padding: `${(noPadding && !haveAttachments) ? 2 : 16}px 16px`, width: "100%", alignItems: isMe ? "flex-end" : "flex-start" }}>
-            <ChatContainer onContextMenu={displayMenu}>
+        <Message isMe={isMe} onContextMenu={displayMenu} direction="column" spacing={2} sx={{ padding: `${(noPadding && !haveAttachments) ? 2 : 16}px 16px`, width: "100%", alignItems: isMe ? "flex-end" : "flex-start" }}>
+            {
+                !isMe && <UserAvatar size={38} user={chat?.user} onClick={showUserDialog} />
+            }
+            <MessageContent theme={theme} isMe={isMe}>
                 {
-                    !isMe && <UserAvatar size={38} user={chat?.user} onClick={showUserDialog} />
+                    !isMe && (
+                        <Typography fontSize={13} fontWeight={500} color={chat?.user.color}>
+                            {getDisplayName(chat?.user)}
+                        </Typography>
+                    )
                 }
-                <Stack sx={{ marginLeft: isMe ? "0" : "12px" }} display="flex" flexDirection="column" gap={1} >
-                    {
-                        renderContent && <Box sx={{
-                            width: "100%",
-                            backgroundColor: !isMe ? theme.palette.background.paper : alpha(theme.palette.primary.main, 0.1),
-                            padding: "8px 12px",
-                            boxShadow: theme.shadows[3],
-                            borderRadius: "8px",
-                            border: "1px solid transparent",
-                        }}>
-                            {
-                                !isMe && (
-                                    <Typography fontSize={13} fontWeight={500} color={chat?.user.color}>
-                                        {getDisplayName(chat?.user)}
-                                    </Typography>
-                                )
-                            }
-                            {
-                                chat.ref_message && (
-                                    <MessageSubtitle ref={chat.ref_message} float="left" />
-                                )
-                            }
-                            {haveContent && <TextContent>
-                                {chat?.content}
-                                <MessageMeta>
-                                    <div style={{ fontSize: ".75rem", whiteSpace: "nowrap", color: theme.palette.text.secondary }}>{timeText}</div>
-                                </MessageMeta>
-                            </TextContent>}
-                        </Box>
-                    }
-                    {
-                        otherList.map((v, i) => {
-                            return <ChatAttachment key={i} attachment={v} isMe={isMe} />
-                        })
-                    }
 
-                    {
-                        mediaList.length > 0 && (
-                            <MediaAttachments attachments={mediaList} isMe={isMe} />
-                        )
+                {
+                    chat.ref_message && (
+                        <MessageSubtitle ref={chat.ref_message} float="left" />
+                    )
+                }
 
-                    }
+                <Box sx={{display: "flex", alignItems: "center", alignContent: "center"}}>
+                    {isLoadingMsg && <GradientCircularProgress sx={{marginRight: "12px"}} />}
+                    {haveContent && <Markdown content={chat?.content} />}
+                </Box>
 
-                    {
-                        (isMe && !haveContent) && (
-                            <Typography sx={{ fontSize: "0.8125rem", textAlign: "right" }}>{timeText}</Typography>
-                        )
-                    }
-                </Stack>
-            </ChatContainer>
+                {
+                    otherList.length > 0 && (
+                        <OtherAttachments attachments={otherList} isMe={isMe} />
+                    )
+                }
 
+                {
+                    mediaList.length > 0 && (
+                        <MediaAttachments attachments={mediaList} isMe={isMe} />
+                    )
+
+                }
+
+                <Typography variant="caption" color="textSecondary" sx={{ display: "block", mt: 1 }}>
+                    {timeText}
+                </Typography>
+            </MessageContent>
 
             <Menu id={MENU_ID} theme={theme.palette.mode}>
                 <Paper sx={{ maxWidth: '100%', boxShadow: "none" }}>
@@ -364,9 +392,7 @@ function ChatItem({ chat, chatState, isMe = false, noPadding = false }) {
                     </MenuList>
                 </Paper>
             </Menu>
-
-
-        </Stack>
+        </Message>
     )
 }
 

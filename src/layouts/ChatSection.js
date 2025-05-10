@@ -145,10 +145,6 @@ const ChatSection = () => {
         }
     })
 
-    useEffect(() => {
-
-    }, []);
-
     const handleSend = (data) => {
         dispatch(sendChat(id, data))
             .then((res) => {

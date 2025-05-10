@@ -48,7 +48,19 @@ const chatSlice = createSlice({
         appendNewChat(state, { payload }) {
             const { chatId, message } = payload;
             if(state.chatData[chatId])
-                state.chatData[chatId] = [message, ...state.chatData[chatId]];
+            {
+                // ì already contain message with same id then update it, dont create
+                const messageIndex = state.chatData[chatId].findIndex(obj => obj.id == message.id);
+                if (messageIndex !== -1) // already have, -> update
+                {
+                    state.chatData[chatId][messageIndex] = message;
+                }
+                else
+                {
+                    state.chatData[chatId] = [message, ...state.chatData[chatId]];
+                }
+            }
+
             const index = state.chatList.findIndex(obj => obj.chat_id == chatId);
             if (index !== -1) {
                 state.chatList[index].last_chat_id = message.chat_id;

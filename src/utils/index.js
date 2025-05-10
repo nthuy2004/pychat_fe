@@ -106,6 +106,20 @@ export async function downloadAs(fileUrl, fileName) {
 export function sanitizeMessage(htmlContent) {
     return htmlContent
         .replace(/&nbsp;/g, ' ')
-        .replace(/<[^>]+>/g, '')
+        .replace(/<div>/gi, '\n')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/div>/gi, '')
+        .replace(/<\/?[^>]+(>|$)/g, '')
         .trim();
+}
+
+export function getCaretPosition(editableDiv) { //stackoverflow
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return null;
+
+    const range = selection.getRangeAt(0);
+    const preCaretRange = range.cloneRange();
+    preCaretRange.selectNodeContents(editableDiv);
+    preCaretRange.setEnd(range.endContainer, range.endOffset);
+    return preCaretRange.toString().length;
 }

@@ -32,8 +32,6 @@ const SideBar = () => {
 
     const navigate = useNavigate();
 
-    console.log(theme);
-
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [selected, setSelected] = useState(0);
 
@@ -57,7 +55,7 @@ const SideBar = () => {
                 <Stack alignItems={"center"} spacing={2} sx={{
                     paddingTop: "32px",
                 }}>
-                    <Avatar size={48} />
+                    {/* <Avatar size={48} /> */}
 
                     {LeftTopNavs.map((el, ind) => (
                         <Box sx={{ backgroundColor: ind === selected ? theme.palette.primary.dark : "#00000000", borderRadius: 1.5 }}>

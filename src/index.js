@@ -17,6 +17,10 @@ import { ConfirmProvider } from "material-ui-confirm";
 
 import { ToastContainer } from 'react-toastify';
 import "react-contexify/dist/ReactContexify.css";
+import 'react-photo-view/dist/react-photo-view.css';
+
+import './assets/css/custom.css';
+
 import moment from 'moment';
 import 'moment/locale/vi';
 import CacheProvider from './contexts/CacheContext';
