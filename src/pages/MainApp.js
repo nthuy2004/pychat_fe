@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 import { get_session } from "../redux/auth";
 import { toast } from "react-toastify";
 import { Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Stack } from "@mui/material";
+import { Box, Chip, Stack } from "@mui/material";
 import SideBar from "../layouts/SideBar";
 import ContactBar from "../layouts/ContactBar";
 import ChatSection from "../layouts/ChatSection";
@@ -16,6 +16,14 @@ import { getState } from "../redux";
 
 import useSound from 'use-sound';
 import notiSound from "../assets/sounds/noti.mp3";
+
+function Home() {
+    return (
+        <Box sx={{width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center"}}>
+            <Chip label="Chọn hoặc tạo một cuộc trò chuyện để tiếp tục" />
+        </Box>
+    )
+}
 
 function MainApp() {
     const dispatch = useDispatch();
@@ -104,7 +112,7 @@ function MainApp() {
     return (
         <Routes>
             <Route path="chat" element={<ChatLayout />}>
-                <Route index element={<h1>Helloworld1</h1>} />
+                <Route index element={<Home />} />
                 <Route path=":id" element={<ChatSection />} />
                 <Route path="*" element={<h1>404 error</h1>} />
             </Route>
